@@ -1,0 +1,38 @@
+{
+  "approvals": {},
+  "config": {
+    "direction": "higher",
+    "execution_policy": "danger_full_access",
+    "goal": "Replace this with your measurable experiment goal.",
+    "guard": "Replace this with a cheap guard command.",
+    "iterations": null,
+    "metric": "replace_metric_name",
+    "parallel_mode": "serial",
+    "repos": [
+      {
+        "path": "/abs/path/to/your/project",
+        "role": "primary",
+        "scope": "/abs/path/to/your/project/src,/abs/path/to/your/project/tests"
+      }
+    ],
+    "rollback_policy": "manual_file_revert",
+    "run_tag": "replace_run_tag",
+    "scope": "/abs/path/to/your/project/src,/abs/path/to/your/project/tests",
+    "session_mode": "background",
+    "stop_condition": null,
+    "verify": "Replace this with your mechanical verification command.",
+    "web_search": "disabled"
+  },
+  "created_at": "1970-01-01T00:00:00Z",
+  "defaults": {},
+  "mode": "loop",
+  "notes": [
+    "Set Goal / Metric / Verify / Guard before use.",
+    "Use scout-sized verification first; only spend larger budget after a clear gain."
+  ],
+  "original_goal": "Replace this with the original user request.",
+  "prompt_text": "Replace this with the prompt you want Codex to continue from.",
+  "resume_seed": {},
+  "updated_at": "1970-01-01T00:00:00Z",
+  "version": 1
+}

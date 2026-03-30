@@ -20,6 +20,56 @@
   -> 再进入下一轮
 ```
 
+更完整一点，可以把它看成下面这张通用实验闭环图：
+
+```text
+                 +----------------------+
+                 |   Goal / Metric      |
+                 |   Verify / Guard     |
+                 +----------+-----------+
+                            |
+                            v
+                 +----------------------+
+                 |  Read state/results  |
+                 |  Read lessons/logs   |
+                 +----------+-----------+
+                            |
+                            v
+                 +----------------------+
+                 |  Pick one hypothesis |
+                 |  inside one family   |
+                 +----------+-----------+
+                            |
+                            v
+                 +----------------------+
+                 |  Make atomic change  |
+                 |  run small scout     |
+                 +----------+-----------+
+                            |
+          +-----------------+-----------------+
+          |                                   |
+          v                                   v
+ +----------------------+            +----------------------+
+ | scout clearly wins   |            | scout weak / fails   |
+ | run larger confirm   |            | discard or refine    |
+ +----------+-----------+            +----------+-----------+
+            |                                   |
+            v                                   v
+ +----------------------+            +----------------------+
+ | confirm wins -> keep |            | repeated no-signal   |
+ | write lesson         |            | -> pivot family      |
+ +----------+-----------+            +----------+-----------+
+            |                                   |
+            +-----------------+-----------------+
+                              |
+                              v
+                   +----------------------+
+                   | persist state/logs   |
+                   | watchdog/supervisor  |
+                   | continue or stop     |
+                   +----------------------+
+```
+
 它之所以能长期运行，不是因为它会无脑死循环，而是因为它把“研究动作”拆成了稳定的最小单元：
 
 1. `Hypothesis`
@@ -201,6 +251,31 @@ baseline
 更细的任务模式可以看：
 
 - [`docs/TASK_PATTERNS.md`](docs/TASK_PATTERNS.md)
+
+## 如何初始化一个新任务
+
+现在仓库里已经补了通用任务模板和初始化脚本：
+
+- [`templates/autoresearch-task.template.json`](templates/autoresearch-task.template.json)
+- [`scripts/init_generic_task.py`](scripts/init_generic_task.py)
+
+最小用法示例：
+
+```bash
+python3 scripts/init_generic_task.py \
+  --project-dir /abs/path/to/project \
+  --output /abs/path/to/project/autoresearch-launch.json \
+  --goal "Improve benchmark pass rate beyond 0.72" \
+  --metric benchmark_pass_rate \
+  --direction higher \
+  --verify "python3 run_eval.py --samples 30" \
+  --guard "python3 -m py_compile main.py" \
+  --run-tag benchmark_run_20260330 \
+  --scope "/abs/path/to/project/src,/abs/path/to/project/tests" \
+  --prompt "Continue iterating on the benchmark task with scout-first protocol."
+```
+
+生成好 launch 文件后，就可以把它接到 runtime controller 上继续跑。
 
 ## 仓库结构
 
