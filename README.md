@@ -154,6 +154,142 @@ python3 scripts/init_generic_task.py \
   --prompt "Continue iterating on the benchmark task with scout-first protocol."
 ```
 
+### 每个参数如何设置
+
+`new_task.sh` 的参数顺序是：
+
+```text
+<project_dir> <goal> <metric> <direction> <verify> <guard> <run_tag> [scope] [prompt]
+```
+
+逐个解释如下：
+
+- `project_dir`
+  目标项目的绝对路径。
+  应该填你真正要做实验的仓库根目录，例如：
+  ` /home/user/my_project `
+
+- `goal`
+  用自然语言写清楚这轮实验总目标。
+  应该可衡量，别写成“提升效果”这种空话。
+  好例子：
+  `Improve benchmark pass rate beyond 0.72`
+  `Reduce p95 latency below 180ms`
+
+- `metric`
+  结果日志里的指标名字。
+  建议用稳定的英文 snake_case，例如：
+  `benchmark_pass_rate`
+  `p95_latency_ms`
+  `test_exact_match`
+
+- `direction`
+  指标优化方向，只能填：
+  - `higher`
+  - `lower`
+  如果是准确率、通过率、召回率，就用 `higher`。
+  如果是延迟、成本、错误数、内存，就用 `lower`。
+
+- `verify`
+  真正用于比较实验效果的机械验证命令。
+  这是最关键的参数之一。
+  建议这里放“小 scout 预算”的验证命令，而不是最贵的全量跑法。
+  好例子：
+  `python3 run_eval.py --samples 30`
+  `pytest tests/bench -q`
+  `python3 eval_rag.py --subset dev30`
+
+- `guard`
+  廉价但必要的防护命令，用来阻止明显坏改动进入下一轮。
+  常见是：
+  `python3 -m py_compile main.py`
+  `pytest tests/smoke -q`
+  `npm run lint`
+  `cargo check`
+  guard 应该比 verify 便宜，而且优先检查“代码没坏”。
+
+- `run_tag`
+  这轮实验的唯一标识。
+  建议带日期和任务名，例如：
+  `benchmark_run_20260330`
+  `rag_rerank_20260330`
+  `latency_tune_20260330`
+
+- `scope`
+  可选参数。
+  填允许系统重点修改或关注的路径范围，多个路径用逗号分隔。
+  不填时默认就是整个 `project_dir`。
+  好例子：
+  `"/abs/path/to/project/src,/abs/path/to/project/tests"`
+  `"/abs/path/to/project/app,/abs/path/to/project/eval"`
+
+- `prompt`
+  可选参数。
+  这是给 Codex 的原始任务说明，会写进 launch 文件。
+  不填时默认使用 `goal`。
+  建议写成带约束的操作指令，例如：
+  `Continue iterating with scout-first protocol; only run full confirm after a clear gain.`
+
+### 参数设置建议
+
+- `goal` 决定方向，写得越具体越好。
+- `metric` 决定结果日志是否清晰，尽量不要中途改名。
+- `verify` 决定系统是不是在优化你真正关心的东西。
+- `guard` 决定它会不会把代码改坏。
+- `scope` 决定系统搜索空间，不要一上来放得太大。
+- `prompt` 决定 Codex 的研究风格，可以加入：
+  - 先 scout 再 confirm
+  - 不要扩大搜索范围
+  - 优先 reward-side
+  - 禁止改某些目录
+
+### 三组直接可用的例子
+
+训练任务：
+
+```bash
+./scripts/new_task.sh \
+  /abs/path/to/train_repo \
+  "Improve dev exact match beyond 0.41" \
+  dev_exact_match \
+  higher \
+  "python3 train_eval.py --eval-samples 30" \
+  "python3 -m py_compile train.py" \
+  train_run_20260330 \
+  "/abs/path/to/train_repo/src,/abs/path/to/train_repo/eval" \
+  "Use scout-first protocol and only spend full confirm budget after a clear gain."
+```
+
+RAG 任务：
+
+```bash
+./scripts/new_task.sh \
+  /abs/path/to/rag_repo \
+  "Improve answer accuracy beyond 0.68" \
+  answer_accuracy \
+  higher \
+  "python3 eval_rag.py --split dev --limit 50" \
+  "pytest tests/smoke -q" \
+  rag_run_20260330 \
+  "/abs/path/to/rag_repo/retrieval,/abs/path/to/rag_repo/prompts" \
+  "Optimize retrieval and rerank first; avoid broad architecture changes."
+```
+
+性能任务：
+
+```bash
+./scripts/new_task.sh \
+  /abs/path/to/system_repo \
+  "Reduce p95 latency below 180ms" \
+  p95_latency_ms \
+  lower \
+  "python3 bench.py --scenario api --iters 20" \
+  "pytest tests/smoke -q" \
+  latency_run_20260330 \
+  "/abs/path/to/system_repo/service,/abs/path/to/system_repo/bench" \
+  "Prioritize low-risk latency improvements and keep regression checks green."
+```
+
 ## 这套系统适合哪些任务
 
 这套系统并不只适合 `GRPO + GSM8K`。只要任务满足“能定义指标，能机械验证，能分轮次试错”，都可以接进来。
