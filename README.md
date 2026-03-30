@@ -2,7 +2,63 @@
 
 一个面向 `GRPO + GSM8K` 的自动研究仓库。
 
-这个仓库不是单纯的论文笔记，也不是一次性的实验归档。它包含两层内容：
+这个仓库不是单纯的论文笔记，也不是一次性的实验归档。它的目标是把一条数学推理实验线做成可以 `7×24` 接力运行的“自动研究永动机”。
+
+## 永动机原理
+
+这套系统的核心不是“持续训练”，而是“持续做小实验并自动决策”。
+
+它按下面这条闭环工作：
+
+```text
+提出一个局部假设
+  -> 修改代码 / 配置
+  -> 跑一次小 scout 验证
+  -> 如果明显变好，再花更大预算做 confirm200
+  -> 根据结果决定 keep / discard / pivot
+  -> 记录 lessons 和 results
+  -> 再进入下一轮
+```
+
+它之所以能长期运行，不是因为它会无脑死循环，而是因为它把“研究动作”拆成了稳定的最小单元：
+
+1. `Hypothesis`
+   每次只尝试一个局部方向，比如改 reward、改 synthetic mix、改 rerank、改 verifier 接法。
+
+2. `Scout`
+   先用小预算验证方向值不值得继续，避免每次都直接烧 200-sample confirm。
+
+3. `Confirm`
+   只有 scout 明显超过 retained neighborhood，才进入更重的全量确认。
+
+4. `Decision`
+   每轮实验结束后，不是只看分数，而是明确写成：
+   - `keep`
+   - `discard`
+   - `refine`
+   - `pivot`
+   - `search`
+
+5. `Persistence`
+   所有结果都写入状态文件和日志，下次重启可以继续接力，而不是重新开始。
+
+6. `Watchdog + Supervisor`
+   watchdog 负责守护运行时，supervisor 负责判断这轮是否还能继续跑；如果进入 `soft_blocked / needs_human`，就停下来等人工切换 hypothesis family，而不是浪费算力。
+
+所以这套“永动机”的本质是：
+
+```text
+自动做实验
+自动记录证据
+自动保留有效改动
+自动丢弃失败尝试
+自动在低价值阶段停机
+人工只在需要切换研究方向时介入
+```
+
+## 这套系统由什么组成
+
+它包含两层内容：
 
 - `codex-autoresearch` 运行时引擎：负责把“提出假设 -> 修改代码 -> 跑验证 -> keep / discard / pivot”这套循环自动化。
 - `grpo_gsm8k_snapshot/`：这条 `GRPO on GSM8K` 研究线的可接力快照，带主脚本、watchdog、launch/state/runtime 文件、lessons、results 和关键 run summary。
