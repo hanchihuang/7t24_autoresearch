@@ -1,8 +1,8 @@
 # 7t24 Autoresearch
 
-一个面向 `GRPO + GSM8K` 的自动研究仓库。
+一个通用的 `7×24` 自动实验系统仓库。
 
-这个仓库不是单纯的论文笔记，也不是一次性的实验归档。它的目标是把一条数学推理实验线做成可以 `7×24` 接力运行的“自动研究永动机”。
+这个仓库不是单纯的论文笔记，也不是一次性的实验归档。它的目标是把“提出实验假设 -> 跑验证 -> 保留有效改动 -> 放弃失败方向”这件事做成可以 `7×24` 接力运行的自动研究永动机。
 
 ## 永动机原理
 
@@ -56,12 +56,45 @@
 人工只在需要切换研究方向时介入
 ```
 
+## 这套系统适合哪些任务
+
+这套系统并不只适合 `GRPO + GSM8K`。只要任务满足“能定义指标，能机械验证，能分轮次试错”，都可以接进来。
+
+典型任务包括：
+
+- 模型训练实验
+  比如 GRPO、SFT、DPO、reward shaping、curriculum、数据配比、超参搜索。
+
+- 推理时实验
+  比如 rerank、aggregation、self-consistency、verifier 接入、temperature / top-p / candidate count 调整。
+
+- 检索与 RAG 实验
+  比如召回策略、chunking、重排、prompt 模板、索引参数、缓存策略。
+
+- 数据与样本工程
+  比如 hard negative 生成、样本过滤、切片对齐、合成数据注入、teacher-bank 选择。
+
+- 系统指标优化
+  比如延迟、吞吐、内存、成本、成功率、coverage、回归率、错误率。
+
+- 代码与测试闭环
+  比如测试通过率、lint 数量、类型错误数、benchmark 分数、bug 修复回归验证。
+
+更抽象地说，这套系统适用于：
+
+```text
+有目标指标
+有可重复验证
+有候选改动空间
+允许多轮试错
+```
+
 ## 这套系统由什么组成
 
-它包含两层内容：
+仓库当前包含两层内容：
 
 - `codex-autoresearch` 运行时引擎：负责把“提出假设 -> 修改代码 -> 跑验证 -> keep / discard / pivot”这套循环自动化。
-- `grpo_gsm8k_snapshot/`：这条 `GRPO on GSM8K` 研究线的可接力快照，带主脚本、watchdog、launch/state/runtime 文件、lessons、results 和关键 run summary。
+- `grpo_gsm8k_snapshot/`：一个具体的示例任务快照，也就是这条 `GRPO on GSM8K` 研究线，里面保留了主脚本、watchdog、launch/state/runtime 文件、lessons、results 和关键 run summary。
 
 ## 当前状态
 
@@ -74,7 +107,40 @@
 | Runtime status | `needs_human` |
 | 当前建议方向 | `reward-side / slice-aware shaping` |
 
-## 这条主线现在做到哪了
+上面这张表是仓库里附带的 `GRPO/GSM8K` 示例任务当前状态，不是系统本身的限制。系统本身是通用的，换一套 metric、verify 和 hypothesis family，就可以迁移到别的实验任务。
+
+## 系统什么时候会改“大方向”
+
+系统不是某次实验失败就立刻乱跳方向。只有当当前方法族已经反复验证、但仍然没有稳定信号时，才会进入 `pivot`，也就是切换改进的大方向。
+
+典型触发条件有：
+
+1. 连续多个实验都 `discard`
+   说明不是单个参数点没调好，而是这一类方法整体没有产出。
+
+2. 只有弱 hint，但无法复现
+   某个 scout 看起来有一点提升，但邻域复查或 confirm 后消失。
+
+3. 核心机制没有真正触发
+   例如 reward path、replay path、verifier path 在日志里根本没有生效。
+
+4. 小样本收益不能迁移到大样本确认
+   30-sample scout 亮眼，但 200-sample confirm 站不住。
+
+5. supervisor 判断继续跑已不划算
+   此时系统会进入：
+   - `pivot`
+   - `needs_human`
+   - `soft_blocked`
+
+所以更准确地说：
+
+```text
+系统会在“当前方法族已经被试得差不多，而且没有稳定增益”时改大方向，
+而不是因为某一次实验失败就乱切 family。
+```
+
+## 示例任务：这条 GRPO 主线现在做到哪了
 
 这条线当前已经明确分成三层结果，不能混写：
 
@@ -97,6 +163,44 @@
 - 继续窄化 synthetic template 没有信号
 - 做本地轻量 replay 近似也没有信号
 - 下一跳应该转向 `reward-side / slice-aware shaping`
+
+## 如何迁移到其他实验任务
+
+如果你要把这套系统迁移到别的任务，最少需要替换四件事：
+
+1. `Goal`
+   你想优化什么，例如 exact match、latency、pass rate、cost、coverage。
+
+2. `Metric`
+   必须有明确方向：
+   - higher is better
+   - lower is better
+
+3. `Verify`
+   需要有一条能机械执行的验证命令。
+
+4. `Hypothesis families`
+   需要预先划分当前允许搜索的实验家族，例如：
+   - 数据侧
+   - 模型侧
+   - 推理侧
+   - 奖励侧
+   - 检索侧
+
+迁移时最重要的不是复制某个 `GRPO` 技巧，而是保留这个研究协议：
+
+```text
+baseline
+-> scout
+-> confirm
+-> keep / discard / pivot
+-> lessons
+-> next family
+```
+
+更细的任务模式可以看：
+
+- [`docs/TASK_PATTERNS.md`](docs/TASK_PATTERNS.md)
 
 ## 仓库结构
 
