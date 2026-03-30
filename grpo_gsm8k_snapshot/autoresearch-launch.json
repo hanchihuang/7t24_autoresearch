@@ -1,0 +1,35 @@
+{
+  "approvals": {},
+  "config": {
+    "direction": "higher",
+    "execution_policy": "danger_full_access",
+    "goal": "Improve GSM8K exact-match beyond 0.445 by strengthening GRPO training with targeted hard synthetic augmentation over an unattended 24-hour background run. Use a two-stage protocol: first run a ~5-minute scout (30-sample GSM8K eval, short training budget) for every hypothesis; only if the scout shows a clear gain versus the retained neighborhood should the run spend full 200-sample confirmation budget.",
+    "guard": "python3 -m py_compile '/home/user/\u56fe\u7247/llama3_1_(8b)_grpo.py'",
+    "iterations": null,
+    "metric": "gsm8k_exact_match_rate_test200",
+    "parallel_mode": "serial",
+    "repos": [
+      {
+        "path": "/home/user/\u56fe\u7247",
+        "role": "primary",
+        "scope": "/home/user/\u56fe\u7247/llama3_1_(8b)_grpo.py,/home/user/\u56fe\u7247/gsm8k_improved,/home/user/\u56fe\u7247/outputs_llama3_1_grpo_*"
+      }
+    ],
+    "rollback_policy": "manual_file_revert",
+    "run_tag": "gsm8k_grpo_aug_20260329",
+    "scope": "/home/user/\u56fe\u7247/llama3_1_(8b)_grpo.py,/home/user/\u56fe\u7247/gsm8k_improved,/home/user/\u56fe\u7247/outputs_llama3_1_grpo_*",
+    "session_mode": "background",
+    "stop_condition": null,
+    "verify": "DATASET_SOURCE=gsm8k NUM_EVAL_SAMPLES=30 MAX_TRAIN_SAMPLES=1000 SFT_WARMUP_STEPS=20 MAX_STEPS=20 EVAL_USE_CONFIDENCE_RERANK=1 EVAL_NUM_CANDIDATES=8 python3 /home/user/\u56fe\u7247/llama3_1_(8b)_grpo.py",
+    "web_search": "enabled"
+  },
+  "created_at": "2026-03-29T09:15:17Z",
+  "defaults": {},
+  "mode": "loop",
+  "notes": [],
+  "original_goal": "\u7ee7\u7eed\uff0c\u6ce8\u610f\u6bcf\u4e2a\u5c0f\u5b9e\u9a8c\u5148\u7528\u7ea65\u5206\u949f\u7684 scout \u9a8c\u8bc1\uff1b\u53ea\u6709\u660e\u663e\u63d0\u5347\u65f6\uff0c\u624d\u505a 200-sample \u5168\u91cf\u786e\u8ba4\uff0c\u5e76\u4fdd\u630124\u5c0f\u65f6\u4e0d\u505c\u6709\u6548\u8fed\u4ee3 GRPO \u5728 GSM8K \u4e0a\u7684\u6548\u679c\u3002",
+  "prompt_text": "\u7ee7\u7eed\uff0c\u6ce8\u610f\u6bcf\u4e2a\u5c0f\u5b9e\u9a8c\u5148\u7528\u7ea65\u5206\u949f\u7684 scout \u9a8c\u8bc1\uff1b\u53ea\u6709\u660e\u663e\u63d0\u5347\u65f6\uff0c\u624d\u505a 200-sample \u5168\u91cf\u786e\u8ba4\uff0c\u5e76\u4fdd\u630124\u5c0f\u65f6\u4e0d\u505c\u6709\u6548\u8fed\u4ee3 GRPO \u5728 GSM8K \u4e0a\u7684\u6548\u679c\u3002",
+  "resume_seed": {},
+  "updated_at": "2026-03-29T09:15:17Z",
+  "version": 1
+}

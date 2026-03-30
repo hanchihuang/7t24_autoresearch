@@ -1,0 +1,115 @@
+{
+  "command": [
+    "/home/user/anaconda3/bin/python3",
+    "/home/user/\u56fe\u7247/.agents/skills/codex-autoresearch/scripts/autoresearch_runtime_ctl.py",
+    "run",
+    "--repo",
+    "/home/user/\u56fe\u7247",
+    "--launch-path",
+    "/home/user/\u56fe\u7247/autoresearch-launch.json",
+    "--results-path",
+    "/home/user/\u56fe\u7247/research-results.tsv",
+    "--runtime-path",
+    "/home/user/\u56fe\u7247/autoresearch-runtime.json",
+    "--log-path",
+    "/home/user/\u56fe\u7247/autoresearch-runtime.log",
+    "--sleep-seconds",
+    "5",
+    "--max-stagnation",
+    "3",
+    "--codex-bin",
+    "codex"
+  ],
+  "created_at": "2026-03-30T06:58:16Z",
+  "last_commit_gate": {
+    "blockers": [],
+    "decision": "allow",
+    "destructive_approved": false,
+    "phase": "precommit",
+    "repo_gates": [
+      {
+        "blockers": [],
+        "decision": "skipped",
+        "destructive_approved": false,
+        "phase": "precommit",
+        "repo": "/home/user/\u56fe\u7247",
+        "role": "primary",
+        "rollback_policy": "manual_file_revert",
+        "scope_patterns": [
+          "/home/user/\u56fe\u7247/llama3_1_(8b)_grpo.py",
+          "/home/user/\u56fe\u7247/gsm8k_improved",
+          "/home/user/\u56fe\u7247/outputs_llama3_1_grpo_*"
+        ],
+        "staged_artifacts": [],
+        "unexpected_worktree": [],
+        "warnings": []
+      }
+    ],
+    "rollback_policy": "manual_file_revert",
+    "scope_patterns": [
+      "/home/user/\u56fe\u7247/llama3_1_(8b)_grpo.py",
+      "/home/user/\u56fe\u7247/gsm8k_improved",
+      "/home/user/\u56fe\u7247/outputs_llama3_1_grpo_*"
+    ],
+    "staged_artifacts": [],
+    "unexpected_worktree": [],
+    "warnings": []
+  },
+  "last_decision": "",
+  "last_health_check": {
+    "blockers": [],
+    "decision": "ok",
+    "free_mb": 945875,
+    "has_results": true,
+    "has_state": true,
+    "main_rows": 89,
+    "repo_worktree_checks": [
+      {
+        "repo": "/home/user/\u56fe\u7247",
+        "role": "primary",
+        "scope_patterns": [
+          "/home/user/\u56fe\u7247/llama3_1_(8b)_grpo.py",
+          "/home/user/\u56fe\u7247/gsm8k_improved",
+          "/home/user/\u56fe\u7247/outputs_llama3_1_grpo_*"
+        ],
+        "unexpected_worktree": []
+      }
+    ],
+    "results_path": "/home/user/\u56fe\u7247/research-results.tsv",
+    "resume_decision": "full_resume",
+    "resume_detail": "json_matches_tsv",
+    "state_path": "/home/user/\u56fe\u7247/autoresearch-state.json",
+    "warnings": []
+  },
+  "last_reason": "",
+  "last_seen_iteration": null,
+  "last_seen_status": "",
+  "launch_context": {
+    "decision": "resumable",
+    "launch_manifest_present": true,
+    "launch_path": "/home/user/\u56fe\u7247/autoresearch-launch.json",
+    "reason": "full_resume",
+    "reasons": [
+      "JSON state matches the reconstructed TSV summary.",
+      "Results log and state are available; the runtime can continue from the saved config."
+    ],
+    "results_path": "/home/user/\u56fe\u7247/research-results.tsv",
+    "resume_strategy": "full_resume",
+    "runtime_path": "/home/user/\u56fe\u7247/autoresearch-runtime.json",
+    "runtime_present": true,
+    "runtime_running": false,
+    "state_path": "/home/user/\u56fe\u7247/autoresearch-state.json"
+  },
+  "launch_path": "/home/user/\u56fe\u7247/autoresearch-launch.json",
+  "log_path": "/home/user/\u56fe\u7247/autoresearch-runtime.log",
+  "pgid": 2243228,
+  "pid": 2243228,
+  "repo": "/home/user/\u56fe\u7247",
+  "requested_stop_at": null,
+  "results_path": "/home/user/\u56fe\u7247/research-results.tsv",
+  "state_path": "/home/user/\u56fe\u7247/autoresearch-state.json",
+  "status": "running",
+  "terminal_reason": "none",
+  "updated_at": "2026-03-30T06:58:16Z",
+  "version": 1
+}
