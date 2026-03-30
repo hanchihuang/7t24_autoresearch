@@ -31,6 +31,7 @@ from autoresearch_launch_gate import evaluate_launch_context, pid_is_alive
 from autoresearch_preflight import evaluate_managed_repos_preflight
 from autoresearch_resume_prompt import build_runtime_prompt
 from autoresearch_supervisor_status import evaluate_supervisor_status
+from autoresearch_codex_direction_planner import DEFAULT_OUTPUT_JSON, DEFAULT_OUTPUT_MD
 from autoresearch_runtime_common import (
     DEFAULT_EXECUTION_POLICY,
     DEFAULT_RESULTS_PATH,
@@ -637,6 +638,44 @@ def run_runtime(args: argparse.Namespace) -> int:
                 results_path=results_path,
                 state_path=Path(str(runtime["state_path"])),
             )
+
+        if decision == "needs_human" and reason in {"soft_blocked", "stagnated", "blocked"}:
+            planner_cmd = [
+                sys.executable,
+                str(Path(__file__).resolve().parent / "autoresearch_codex_direction_planner.py"),
+                "--repo",
+                str(repo),
+                "--results-path",
+                str(results_path),
+                "--state-path",
+                str(runtime["state_path"]),
+                "--codex-bin",
+                args.codex_bin,
+            ]
+            try:
+                planner = subprocess.run(
+                    planner_cmd,
+                    cwd=repo,
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                )
+                if planner.returncode == 0:
+                    runtime["direction_plan"] = {
+                        "status": "generated",
+                        "output_md": str(repo / DEFAULT_OUTPUT_MD),
+                        "output_json": str(repo / DEFAULT_OUTPUT_JSON),
+                    }
+                else:
+                    runtime["direction_plan"] = {
+                        "status": "failed",
+                        "error": planner.stderr.strip() or planner.stdout.strip(),
+                    }
+            except OSError as exc:
+                runtime["direction_plan"] = {
+                    "status": "failed",
+                    "error": str(exc),
+                }
 
         runtime["status"] = "terminal" if decision == "stop" else "needs_human"
         runtime["terminal_reason"] = reason

@@ -98,6 +98,11 @@
 7. `Automatic Direction Shift Advice`
    当 recent history 显示当前 family 已经反复无信号时，supervisor 不再只给出 `needs_human`，还会自动产出 `suggested_directions`，提示下一组更值得切换的 hypothesis families。
 
+8. `Codex Direction Planning`
+   当系统真正进入 `soft_blocked / needs_human` 时，runtime 还会进一步自动调用一次 `Codex`，基于 `results + state + lessons` 生成下一阶段的方向规划，输出为：
+   - `autoresearch-next-directions.md`
+   - `autoresearch-next-directions.json`
+
 所以这套“永动机”的本质是：
 
 ```text
@@ -162,6 +167,20 @@ python3 scripts/init_generic_task.py \
 ```bash
 python3 scripts/autoresearch_direction_advisor.py \
   --repo /abs/path/to/your_project
+```
+
+如果你想主动调用一次 Codex 来生成下一阶段方向规划：
+
+```bash
+python3 scripts/autoresearch_codex_direction_planner.py \
+  --repo /abs/path/to/your_project
+```
+
+生成的文件会默认落在项目根目录：
+
+```text
+autoresearch-next-directions.md
+autoresearch-next-directions.json
 ```
 
 ### 每个参数如何设置
@@ -396,6 +415,17 @@ RAG 任务：
 - `direction_shift.exhausted_families`
 - `direction_shift.suggested_directions`
 - `direction_shift.rationales`
+
+如果运行时最终真的进入：
+
+- `soft_blocked`
+- `stagnated`
+- `blocked`
+
+那么 runtime 会进一步自动调用 `Codex` 做第二层判断：
+
+- 规则层先判断“现在该不该换方向”
+- Codex 再判断“具体应该换到哪组方向、为什么、先做什么 scout”
 
 ## 示例任务：这条 GRPO 主线现在做到哪了
 

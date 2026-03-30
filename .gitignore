@@ -9,6 +9,8 @@ research-results.tsv.tmp
 results.tsv
 run.log
 autoresearch-lessons.md
+autoresearch-next-directions.md
+autoresearch-next-directions.json
 !tests/e2e-fixtures/exec_marker_reduction/research-results.tsv
 !tests/e2e-fixtures/exec_marker_reduction/autoresearch-state.json
 !tests/e2e-fixtures/exec_marker_reduction/autoresearch-lessons.md
