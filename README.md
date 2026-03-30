@@ -106,6 +106,54 @@
 人工只在需要切换研究方向时介入
 ```
 
+## 其他用户的一键启动代码
+
+最简单的方式是直接用仓库里的 shell 包装器：
+
+```bash
+git clone https://github.com/hanchihuang/7t24_autoresearch.git
+cd 7t24_autoresearch
+
+./scripts/new_task.sh \
+  /abs/path/to/your_project \
+  "Improve benchmark pass rate beyond 0.72" \
+  benchmark_pass_rate \
+  higher \
+  "python3 run_eval.py --samples 30" \
+  "python3 -m py_compile main.py" \
+  benchmark_run_20260330 \
+  "/abs/path/to/your_project/src,/abs/path/to/your_project/tests" \
+  "Continue iterating on this benchmark task with scout-first protocol."
+```
+
+它会在你的项目目录下生成：
+
+```text
+/abs/path/to/your_project/autoresearch-launch.json
+```
+
+然后直接启动：
+
+```bash
+python3 scripts/autoresearch_runtime_ctl.py start --repo /abs/path/to/your_project
+```
+
+如果你更喜欢显式 Python 命令，也可以用：
+
+```bash
+python3 scripts/init_generic_task.py \
+  --project-dir /abs/path/to/project \
+  --output /abs/path/to/project/autoresearch-launch.json \
+  --goal "Improve benchmark pass rate beyond 0.72" \
+  --metric benchmark_pass_rate \
+  --direction higher \
+  --verify "python3 run_eval.py --samples 30" \
+  --guard "python3 -m py_compile main.py" \
+  --run-tag benchmark_run_20260330 \
+  --scope "/abs/path/to/project/src,/abs/path/to/project/tests" \
+  --prompt "Continue iterating on the benchmark task with scout-first protocol."
+```
+
 ## 这套系统适合哪些任务
 
 这套系统并不只适合 `GRPO + GSM8K`。只要任务满足“能定义指标，能机械验证，能分轮次试错”，都可以接进来。
@@ -259,40 +307,6 @@ baseline
 - [`templates/autoresearch-task.template.json`](templates/autoresearch-task.template.json)
 - [`scripts/init_generic_task.py`](scripts/init_generic_task.py)
 - [`scripts/new_task.sh`](scripts/new_task.sh)
-
-### 其他用户的一键启动代码
-
-最简单的方式是直接用这个 shell 包装器：
-
-```bash
-git clone https://github.com/hanchihuang/7t24_autoresearch.git
-cd 7t24_autoresearch
-
-./scripts/new_task.sh \
-  /abs/path/to/your_project \
-  "Improve benchmark pass rate beyond 0.72" \
-  benchmark_pass_rate \
-  higher \
-  "python3 run_eval.py --samples 30" \
-  "python3 -m py_compile main.py" \
-  benchmark_run_20260330 \
-  "/abs/path/to/your_project/src,/abs/path/to/your_project/tests" \
-  "Continue iterating on this benchmark task with scout-first protocol."
-```
-
-它会在你的项目目录下生成：
-
-```text
-/abs/path/to/your_project/autoresearch-launch.json
-```
-
-然后直接启动：
-
-```bash
-python3 scripts/autoresearch_runtime_ctl.py start --repo /abs/path/to/your_project
-```
-
-如果你更喜欢显式 Python 命令，也可以这样：
 
 最小用法示例：
 
