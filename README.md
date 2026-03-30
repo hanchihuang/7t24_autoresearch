@@ -102,6 +102,7 @@
    当系统真正进入 `soft_blocked / needs_human` 时，runtime 还会进一步自动调用一次 `Codex`，基于 `results + state + lessons` 生成下一阶段的方向规划，输出为：
    - `autoresearch-next-directions.md`
    - `autoresearch-next-directions.json`
+   如果方向规划成功，runtime 会把这份计划自动注入下一轮 prompt，并优先按新的 hypothesis family 继续跑，而不是原地停住。
 
 所以这套“永动机”的本质是：
 
@@ -426,6 +427,7 @@ RAG 任务：
 
 - 规则层先判断“现在该不该换方向”
 - Codex 再判断“具体应该换到哪组方向、为什么、先做什么 scout”
+- 如果成功生成方向规划，runtime 会自动把它带入下一轮 prompt，继续尝试新的大方向
 
 ## 示例任务：这条 GRPO 主线现在做到哪了
 

@@ -639,6 +639,7 @@ def run_runtime(args: argparse.Namespace) -> int:
                 state_path=Path(str(runtime["state_path"])),
             )
 
+        auto_replanned = False
         if decision == "needs_human" and reason in {"soft_blocked", "stagnated", "blocked"}:
             planner_cmd = [
                 sys.executable,
@@ -666,6 +667,15 @@ def run_runtime(args: argparse.Namespace) -> int:
                         "output_md": str(repo / DEFAULT_OUTPUT_MD),
                         "output_json": str(repo / DEFAULT_OUTPUT_JSON),
                     }
+                    runtime["auto_direction_replan_count"] = int(
+                        runtime.get("auto_direction_replan_count", 0) or 0
+                    ) + 1
+                    max_auto_replans = 1
+                    if runtime["auto_direction_replan_count"] <= max_auto_replans and reason in {
+                        "soft_blocked",
+                        "stagnated",
+                    }:
+                        auto_replanned = True
                 else:
                     runtime["direction_plan"] = {
                         "status": "failed",
@@ -676,6 +686,15 @@ def run_runtime(args: argparse.Namespace) -> int:
                     "status": "failed",
                     "error": str(exc),
                 }
+
+        if auto_replanned:
+            runtime["status"] = "running"
+            runtime["terminal_reason"] = "none"
+            runtime["last_decision"] = "relaunch"
+            runtime["last_reason"] = "auto_direction_replan"
+            persist_runtime(runtime_path, runtime)
+            time.sleep(args.sleep_seconds)
+            continue
 
         runtime["status"] = "terminal" if decision == "stop" else "needs_human"
         runtime["terminal_reason"] = reason

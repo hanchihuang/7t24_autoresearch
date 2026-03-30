@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 from autoresearch_helpers import (
@@ -77,6 +78,40 @@ def build_runtime_prompt(
         if value not in (None, "", []):
             lines.append(f"{label}: {value}")
 
+    next_directions_json = primary_repo / "autoresearch-next-directions.json"
+    next_directions_md = primary_repo / "autoresearch-next-directions.md"
+    if next_directions_json.exists():
+        try:
+            plan = json.loads(next_directions_json.read_text(encoding="utf-8"))
+        except Exception:
+            plan = None
+        if isinstance(plan, dict):
+            lines.extend(
+                [
+                    "",
+                    "Auto direction shift plan is available.",
+                    f"Next directions JSON: {next_directions_json}",
+                    f"Next directions Markdown: {next_directions_md}",
+                ]
+            )
+            summary = str(plan.get("summary", "")).strip()
+            if summary:
+                lines.append(f"Direction summary: {summary}")
+            next_directions = plan.get("next_directions", [])
+            if isinstance(next_directions, list) and next_directions:
+                lines.append("Prioritize these hypothesis families next:")
+                for item in next_directions[:5]:
+                    if not isinstance(item, dict):
+                        continue
+                    name = str(item.get("name", "")).strip() or "<unnamed>"
+                    rationale = str(item.get("rationale", "")).strip()
+                    scout_idea = str(item.get("scout_idea", "")).strip()
+                    lines.append(f"- {name}")
+                    if rationale:
+                        lines.append(f"  rationale: {rationale}")
+                    if scout_idea:
+                        lines.append(f"  scout_idea: {scout_idea}")
+
     lines.extend(
         [
             "",
@@ -94,6 +129,8 @@ def build_runtime_prompt(
             "- When initializing fresh artifacts for this managed run, call autoresearch_init_run.py with --session-mode background.",
             "- Continue autonomously until a terminal condition or blocker is reached.",
             "- Keep all run-control decisions aligned with the launch manifest and current state.",
+            "- If a next-direction plan exists, treat it as the highest-priority source for the next hypothesis family.",
+            "- When a direction plan exists, prefer trying the suggested family before doing more local tuning in the exhausted family.",
         ]
     )
     return "\n".join(lines).strip() + "\n"
