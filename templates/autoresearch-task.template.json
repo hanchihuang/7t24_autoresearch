@@ -6,8 +6,10 @@
     "goal": "Replace this with your measurable experiment goal.",
     "guard": "Replace this with a cheap guard command.",
     "iterations": null,
+    "max_auto_direction_replans": 1,
     "metric": "replace_metric_name",
     "parallel_mode": "serial",
+    "preferred_direction_families": [],
     "repos": [
       {
         "path": "/abs/path/to/your/project",
@@ -20,6 +22,7 @@
     "scope": "/abs/path/to/your/project/src,/abs/path/to/your/project/tests",
     "session_mode": "background",
     "stop_condition": null,
+    "banned_direction_families": [],
     "verify": "Replace this with your mechanical verification command.",
     "web_search": "disabled"
   },

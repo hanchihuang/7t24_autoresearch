@@ -26,6 +26,24 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--scope", required=True, help="Comma-separated scope patterns.")
     parser.add_argument("--prompt", required=True, help="Original prompt / operator instruction.")
     parser.add_argument(
+        "--max-auto-direction-replans",
+        type=int,
+        default=1,
+        help="How many automatic direction-shift relaunches are allowed before requiring human review.",
+    )
+    parser.add_argument(
+        "--preferred-direction-family",
+        action="append",
+        default=[],
+        help="Preferred next-direction family. May be passed multiple times.",
+    )
+    parser.add_argument(
+        "--banned-direction-family",
+        action="append",
+        default=[],
+        help="Banned next-direction family. May be passed multiple times.",
+    )
+    parser.add_argument(
         "--session-mode",
         choices=["background", "foreground"],
         default="background",
@@ -59,6 +77,9 @@ def main() -> int:
     payload["config"]["scope"] = args.scope
     payload["config"]["session_mode"] = args.session_mode
     payload["config"]["web_search"] = args.web_search
+    payload["config"]["max_auto_direction_replans"] = max(args.max_auto_direction_replans, 0)
+    payload["config"]["preferred_direction_families"] = list(args.preferred_direction_family)
+    payload["config"]["banned_direction_families"] = list(args.banned_direction_family)
     payload["config"]["repos"] = [
         {
             "path": project_dir,

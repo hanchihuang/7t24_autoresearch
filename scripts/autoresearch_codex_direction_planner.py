@@ -16,6 +16,7 @@ from autoresearch_helpers import (
     resolve_repo_relative,
     resolve_state_path_for_log,
     write_json_atomic,
+    read_state_payload,
 )
 
 
@@ -120,6 +121,38 @@ def render_markdown(plan: dict[str, Any]) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
+def apply_direction_preferences(
+    plan: dict[str, Any],
+    *,
+    preferred: list[str],
+    banned: list[str],
+) -> dict[str, Any]:
+    directions = plan.get("next_directions", [])
+    if not isinstance(directions, list):
+        return plan
+    preferred_set = {item.strip() for item in preferred if item.strip()}
+    banned_set = {item.strip() for item in banned if item.strip()}
+    filtered: list[dict[str, Any]] = []
+    for item in directions:
+        if not isinstance(item, dict):
+            continue
+        name = str(item.get("name", "")).strip()
+        if name in banned_set:
+            continue
+        filtered.append(item)
+    if preferred_set:
+        filtered.sort(
+            key=lambda item: (
+                0 if str(item.get("name", "")).strip() in preferred_set else 1,
+                int(item.get("priority", 999) or 999),
+            )
+        )
+    for index, item in enumerate(filtered, start=1):
+        item["priority"] = index
+    plan["next_directions"] = filtered
+    return plan
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Use Codex to plan the next hypothesis families after an autoresearch run soft-blocks."
@@ -149,6 +182,11 @@ def main() -> int:
 
     if not command_is_executable(args.codex_bin):
         raise AutoresearchError(f"Codex executable is not available: {args.codex_bin}")
+
+    state_payload = read_state_payload(state_path)
+    config = state_payload.get("config", {})
+    preferred = list(config.get("preferred_direction_families", []) or [])
+    banned = list(config.get("banned_direction_families", []) or [])
 
     advisor_payload = evaluate_direction_shift(
         results_path=results_path,
@@ -181,6 +219,14 @@ def main() -> int:
         plan = json.loads(raw)
     except json.JSONDecodeError as exc:
         raise AutoresearchError(f"Codex planner returned invalid JSON: {exc}: {raw[:500]}") from exc
+
+    plan = apply_direction_preferences(
+        plan,
+        preferred=preferred,
+        banned=banned,
+    )
+    plan["preferred_direction_families"] = preferred
+    plan["banned_direction_families"] = banned
 
     output_md.parent.mkdir(parents=True, exist_ok=True)
     output_md.write_text(render_markdown(plan), encoding="utf-8")

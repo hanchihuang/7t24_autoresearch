@@ -516,6 +516,9 @@ def run_runtime(args: argparse.Namespace) -> int:
     execution_policy = str(
         launch_manifest.get("config", {}).get("execution_policy") or DEFAULT_EXECUTION_POLICY
     )
+    max_auto_direction_replans = int(
+        launch_manifest.get("config", {}).get("max_auto_direction_replans", 1) or 0
+    )
     codex_args = codex_args_for_execution_policy(
         execution_policy,
         extra_args=args.codex_arg,
@@ -670,8 +673,7 @@ def run_runtime(args: argparse.Namespace) -> int:
                     runtime["auto_direction_replan_count"] = int(
                         runtime.get("auto_direction_replan_count", 0) or 0
                     ) + 1
-                    max_auto_replans = 1
-                    if runtime["auto_direction_replan_count"] <= max_auto_replans and reason in {
+                    if runtime["auto_direction_replan_count"] <= max_auto_direction_replans and reason in {
                         "soft_blocked",
                         "stagnated",
                     }:

@@ -104,6 +104,12 @@
    - `autoresearch-next-directions.json`
    如果方向规划成功，runtime 会把这份计划自动注入下一轮 prompt，并优先按新的 hypothesis family 继续跑，而不是原地停住。
 
+9. `Direction Controls`
+   用户现在可以控制自动切方向的行为：
+   - `max_auto_direction_replans`
+   - `preferred_direction_families`
+   - `banned_direction_families`
+
 所以这套“永动机”的本质是：
 
 ```text
@@ -161,6 +167,24 @@ python3 scripts/init_generic_task.py \
   --run-tag benchmark_run_20260330 \
   --scope "/abs/path/to/project/src,/abs/path/to/project/tests" \
   --prompt "Continue iterating on the benchmark task with scout-first protocol."
+```
+
+生成之后，如果你想控制系统自动切方向的行为，可以直接编辑生成好的 `autoresearch-launch.json`：
+
+```json
+{
+  "config": {
+    "max_auto_direction_replans": 2,
+    "preferred_direction_families": [
+      "reward_side_shaping",
+      "verifier_guided_reward"
+    ],
+    "banned_direction_families": [
+      "narrow_template_sweeps",
+      "low_value_local_replay"
+    ]
+  }
+}
 ```
 
 查看系统当前是否建议切换大方向：
@@ -272,6 +296,28 @@ autoresearch-next-directions.json
   - 不要扩大搜索范围
   - 优先 reward-side
   - 禁止改某些目录
+
+另外还有三个和“自动切大方向”相关的配置，生成 launch 后建议按需修改：
+
+- `max_auto_direction_replans`
+  系统最多允许自动切几次大方向后继续 relaunch。
+  默认值：`1`
+  如果你希望系统更保守，设成 `0`。
+  如果你希望它更像真正的永动机，可以设成 `2` 或 `3`。
+
+- `preferred_direction_families`
+  你希望系统优先考虑的下一组方向。
+  例如：
+  - `reward_side_shaping`
+  - `slice_aware_shaping`
+  - `verifier_guided_reward`
+
+- `banned_direction_families`
+  你明确不希望系统再回去尝试的方向。
+  例如：
+  - `narrow_template_sweeps`
+  - `low_value_local_replay`
+  - `broad_architecture_changes`
 
 ### 三组直接可用的例子
 

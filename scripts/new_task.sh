@@ -51,5 +51,11 @@ echo
 echo "Generated launch file:"
 echo "  ${OUTPUT_PATH}"
 echo
+echo "Optional next-direction controls:"
+echo "  edit ${OUTPUT_PATH} and set:"
+echo "    config.max_auto_direction_replans"
+echo "    config.preferred_direction_families"
+echo "    config.banned_direction_families"
+echo
 echo "Next step:"
 echo "  python3 ${ROOT_DIR}/scripts/autoresearch_runtime_ctl.py start --repo ${PROJECT_DIR}"
