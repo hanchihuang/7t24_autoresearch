@@ -8,6 +8,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+from autoresearch_direction_advisor import evaluate_direction_shift
 from autoresearch_helpers import (
     AutoresearchError,
     compare_summary_to_state,
@@ -416,6 +417,25 @@ def evaluate_supervisor_status(
         "stagnation_count": stagnation_count,
         "last_reason": reasons[0] if reasons else "",
     }
+
+    try:
+        direction_shift = evaluate_direction_shift(
+            results_path=results_path,
+            state_path=state_path,
+            recent_window=8,
+        )
+    except AutoresearchError:
+        direction_shift = None
+
+    if direction_shift is not None:
+        supervisor["direction_shift"] = direction_shift
+        if (
+            decision == NEEDS_HUMAN
+            and reason in {"soft_blocked", "stagnated"}
+            and direction_shift.get("suggested_directions")
+        ):
+            suggested = ", ".join(direction_shift["suggested_directions"])
+            reasons.append(f"Suggested next hypothesis families: {suggested}.")
 
     if write_state:
         new_payload = dict(payload)

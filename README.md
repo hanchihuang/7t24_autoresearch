@@ -95,6 +95,9 @@
 6. `Watchdog + Supervisor`
    watchdog 负责守护运行时，supervisor 负责判断这轮是否还能继续跑；如果进入 `soft_blocked / needs_human`，就停下来等人工切换 hypothesis family，而不是浪费算力。
 
+7. `Automatic Direction Shift Advice`
+   当 recent history 显示当前 family 已经反复无信号时，supervisor 不再只给出 `needs_human`，还会自动产出 `suggested_directions`，提示下一组更值得切换的 hypothesis families。
+
 所以这套“永动机”的本质是：
 
 ```text
@@ -152,6 +155,13 @@ python3 scripts/init_generic_task.py \
   --run-tag benchmark_run_20260330 \
   --scope "/abs/path/to/project/src,/abs/path/to/project/tests" \
   --prompt "Continue iterating on the benchmark task with scout-first protocol."
+```
+
+查看系统当前是否建议切换大方向：
+
+```bash
+python3 scripts/autoresearch_direction_advisor.py \
+  --repo /abs/path/to/your_project
 ```
 
 ### 每个参数如何设置
@@ -374,6 +384,19 @@ RAG 任务：
 而不是因为某一次实验失败就乱切 family。
 ```
 
+现在这一条判断不只是写在文档里，也已经接进了 supervisor：
+
+- 连续 discard 过多
+- pivot 累积过多
+- recent labels 显示某个 family 已经被扫空
+
+这些条件出现时，系统会自动在 supervisor state 里产出：
+
+- `direction_shift.should_shift_direction`
+- `direction_shift.exhausted_families`
+- `direction_shift.suggested_directions`
+- `direction_shift.rationales`
+
 ## 示例任务：这条 GRPO 主线现在做到哪了
 
 这条线当前已经明确分成三层结果，不能混写：
@@ -435,6 +458,7 @@ baseline
 更细的任务模式可以看：
 
 - [`docs/TASK_PATTERNS.md`](docs/TASK_PATTERNS.md)
+- [`docs/NEXT_STAGE_ROUTE_MAP.md`](docs/NEXT_STAGE_ROUTE_MAP.md)
 
 ## 如何初始化一个新任务
 
